@@ -1,0 +1,75 @@
+
+{% extends "architectures/base.html" %}
+
+{% block title %}{{ architecture.title }} | SystemAtlas{% endblock %}
+
+{% block content %}
+
+<section class="detail-container">
+
+    <a href="{% url 'architectures:library' %}"
+       class="back-link">
+        ← Back to Architecture Library
+    </a>
+
+    <div class="detail-panel">
+
+        <div class="detail-label">
+            SYSTEM ARCHITECTURE GUIDE
+        </div>
+
+        <div class="detail-icon">&lt;/&gt;</div>
+
+        <span class="category-pill">
+            {{ architecture.category }}
+        </span>
+
+        <h1>{{ architecture.title }}</h1>
+
+        <p class="detail-description">
+            {{ architecture.description }}
+        </p>
+
+        <div class="detail-information">
+            <div>
+                <span class="info-label">DIFFICULTY</span>
+                <strong>{{ architecture.difficulty }}</strong>
+            </div>
+
+            <div>
+                <span class="info-label">PUBLISHED</span>
+                <strong>{{ architecture.created_at|date:"d M Y" }}</strong>
+            </div>
+
+            <div>
+                <span class="info-label">DOCUMENT</span>
+                <strong>HTML Guide</strong>
+            </div>
+        </div>
+
+        <div class="detail-actions">
+
+            <a href="{{ architecture.html_file.url }}"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="primary-button">
+                Open Complete Architecture
+                <span>↗</span>
+            </a>
+
+            <a href="{% url 'architectures:library' %}"
+               class="secondary-button">
+                Back to Library
+            </a>
+
+        </div>
+
+        <p class="detail-footnote">
+            The architecture guide opens in a new browser tab.
+        </p>
+
+    </div>
+
+</section>
+
+{% endblock %}

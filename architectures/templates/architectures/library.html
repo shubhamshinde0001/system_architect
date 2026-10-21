@@ -1,0 +1,242 @@
+
+{% extends "architectures/base.html" %}
+
+{% block title %}Architecture Library | SystemAtlas{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="hero-label">
+        <span class="status-dot"></span>
+        SYSTEM DESIGN KNOWLEDGE BASE
+    </div>
+
+    <h1>
+        Understand how<br>
+        <span class="gradient-text">systems are built.</span>
+    </h1>
+
+    <p class="hero-description">
+        Explore real-world system architectures, database designs,
+        request flows, scaling strategies, diagrams, and technical
+        explanations in one growing knowledge library.
+    </p>
+
+    <a href="#library" class="primary-button">
+        Explore Architectures
+        <span>↓</span>
+    </a>
+
+    <div class="hero-stats">
+
+        <div class="stat">
+            <strong>{{ total_count }}</strong>
+            <span>ARCHITECTURES</span>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat">
+            <strong>{{ categories|length }}</strong>
+            <span>CATEGORIES</span>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat">
+            <strong>24/7</strong>
+            <span>LEARNING ACCESS</span>
+        </div>
+
+    </div>
+
+    <div class="hero-decoration decoration-one"></div>
+    <div class="hero-decoration decoration-two"></div>
+
+</section>
+
+
+<section class="library-section" id="library">
+
+    <!-- SECTION HEADING -->
+
+    <div class="section-heading">
+
+        <div>
+            <div class="eyebrow">YOUR KNOWLEDGE BASE</div>
+
+            <h2>Architecture Library</h2>
+
+            <p>
+                Browse the systems and explore their inner workings.
+            </p>
+        </div>
+
+        <div class="result-count">
+            {{ architectures|length }}
+            result{{ architectures|length|pluralize }}
+        </div>
+
+    </div>
+
+
+    <!-- SEARCH AND CATEGORY FILTER -->
+
+    <form method="GET"
+          action="{% url 'architectures:library' %}"
+          class="filter-bar"
+          id="architecture-search">
+
+        <div class="search-box">
+
+            <span class="search-icon">⌕</span>
+
+            <input
+                type="search"
+                name="q"
+                placeholder="Search systems, technologies, concepts..."
+                value="{{ search_query }}"
+                aria-label="Search architectures"
+            >
+
+        </div>
+
+
+        <select
+            name="category"
+            class="category-select"
+            aria-label="Filter by category"
+        >
+
+            <option value="">All categories</option>
+
+            {% for category in categories %}
+
+                <option
+                    value="{{ category }}"
+                    {% if selected_category == category %}
+                        selected
+                    {% endif %}
+                >
+                    {{ category }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+
+        <button type="submit" class="filter-button">
+            Search
+        </button>
+
+
+        {% if search_query or selected_category %}
+
+            <a
+                href="{% url 'architectures:library' %}#library"
+                class="clear-button"
+            >
+                Clear
+            </a>
+
+        {% endif %}
+
+    </form>
+
+
+    <!-- ARCHITECTURE CARDS -->
+
+    {% if architectures %}
+
+        <div class="architecture-grid">
+
+            {% for architecture in architectures %}
+
+                <article class="architecture-card">
+
+                    <div class="card-top">
+
+                        <div class="card-icon">
+                            <span>&lt;/&gt;</span>
+                        </div>
+
+                        <span class="difficulty difficulty-{{ architecture.difficulty|lower }}">
+                            {{ architecture.difficulty }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="card-category">
+                        {{ architecture.category }}
+                    </div>
+
+
+                    <h3>{{ architecture.title }}</h3>
+
+
+                    <p class="card-description">
+                        {{ architecture.description|truncatewords:28 }}
+                    </p>
+
+
+                    <div class="card-meta">
+
+                        <span>
+                            <span class="meta-dot"></span>
+                            Architecture guide
+                        </span>
+
+                        <span>
+                            {{ architecture.created_at|date:"d M Y" }}
+                        </span>
+
+                    </div>
+
+
+                    <a
+                        href="{% url 'architectures:detail' architecture.slug %}"
+                        class="open-button"
+                    >
+                        Open Architecture
+                        <span>↗</span>
+                    </a>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+
+    <!-- EMPTY SEARCH RESULTS -->
+
+    {% else %}
+
+        <div class="empty-state">
+
+            <div class="empty-icon">&lt;/&gt;</div>
+
+            <h3>No architectures found</h3>
+
+            <p>
+                We couldn't find any architectures matching your search.
+                Try another keyword or select a different category.
+            </p>
+
+            <a
+                href="{% url 'architectures:library' %}#library"
+                class="secondary-button"
+            >
+                View All Architectures
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

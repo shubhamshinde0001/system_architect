@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#141414">
+<title>Netflix System Design — Explained Simply</title>
+<style>
+:root{--bg:#0b0c0f;--panel:#12151b;--panel2:#171b23;--text:#eef0f4;--muted:#a5adba;--red:#e50914;--red2:#ff3440;--line:#292e38;--green:#45d483;--blue:#7ab8ff;--radius:16px}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:90px}body{margin:0;background:radial-gradient(ellipse at 80% -15%,#32151b 0,transparent 38%),var(--bg);color:var(--text);font:16px/1.72 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+a{color:#ff7c84;text-decoration:none}a:hover{color:#fff}::selection{background:#e50914;color:#fff}
+.topbar{height:68px;position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:20px;padding:0 clamp(18px,4vw,56px);background:rgba(11,12,15,.88);backdrop-filter:blur(16px);border-bottom:1px solid #29252a}
+.brand{font-weight:950;letter-spacing:1.5px;color:var(--red);font-size:22px}.brand span{color:#f4f4f5;font-weight:700;font-size:13px;letter-spacing:.1px;margin-left:12px}
+.top-actions{margin-left:auto;display:flex;align-items:center;gap:12px}.pill{border:1px solid #383c45;background:#181b22;color:#d9dde5;border-radius:999px;padding:7px 12px;font-size:12px}
+.layout{display:grid;grid-template-columns:265px minmax(0,900px);gap:44px;max-width:1320px;margin:0 auto;padding:36px 28px 90px}
+.sidebar{position:sticky;top:94px;align-self:start;max-height:calc(100vh - 115px);overflow:auto;padding:18px 12px;border:1px solid var(--line);border-radius:var(--radius);background:rgba(18,21,27,.76)}
+.side-title{font-size:11px;font-weight:800;color:#747d8b;text-transform:uppercase;letter-spacing:1.5px;padding:0 12px 12px}
+.nav a{display:block;color:#aeb5c1;padding:8px 12px;border-radius:9px;font-size:13px;line-height:1.4;border-left:2px solid transparent}.nav a:hover,.nav a.active{background:#261519;color:#fff;border-left-color:var(--red)}
+.search{width:100%;margin:4px 0 18px;padding:11px 12px;border:1px solid #343945;border-radius:10px;background:#0e1015;color:#fff;outline:none}.search:focus{border-color:var(--red)}
+main{min-width:0}.hero{position:relative;overflow:hidden;padding:clamp(28px,5vw,54px);border:1px solid #472126;border-radius:22px;background:linear-gradient(130deg,rgba(229,9,20,.19),rgba(22,24,31,.97) 55%),#171920;margin-bottom:28px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:#ff737b;font-size:11px;text-transform:uppercase;letter-spacing:1.8px;font-weight:900}.dot{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 14px var(--red)}
+.hero h1{font-size:clamp(34px,5vw,54px);line-height:1.08;letter-spacing:-1.8px;margin:18px 0 14px;max-width:700px}.hero p{color:#b8bec8;max-width:690px;font-size:17px;margin:0}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}.stat{border:1px solid #3a3037;background:#101116a8;padding:10px 14px;border-radius:11px;font-size:12px;color:#bfc4ce}.stat strong{display:block;font-size:16px;color:#fff}
+article{counter-reset:section}.content > h2{scroll-margin-top:90px;margin:42px 0 18px;padding:0 0 12px;border-bottom:1px solid var(--line);font-size:28px;line-height:1.25;letter-spacing:-.7px}.content > h2:first-of-type{margin-top:30px}
+.content h3{margin:28px 0 10px;font-size:20px;letter-spacing:-.3px}.content h4{font-size:16px}
+.content p,.content li{color:#c5cad3}.content strong{color:#f4f5f7}.content blockquote{margin:20px 0;padding:14px 18px;border-left:3px solid var(--red);border-radius:0 10px 10px 0;background:#1b1519;color:#d4c5c8}.content blockquote p{margin:0}
+.content ul,.content ol{padding-left:25px}.content li{padding:3px 0}.content li::marker{color:var(--red)}
+.table-wrap{max-width:100%;overflow-x:auto}.content table{width:100%;border-collapse:separate;border-spacing:0;margin:18px 0 24px;font-size:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden}.content th{background:#24171b;color:#fff;text-align:left;font-weight:750}.content td,.content th{padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}.content tr:last-child td{border-bottom:0}.content td{color:#c4cad4}.content tr:nth-child(even) td{background:#12151b}
+.content pre{overflow:auto;padding:20px;border:1px solid #303641;border-radius:12px;background:#090b0f;color:#a9e6bd;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;box-shadow:inset 3px 0 var(--red);white-space:pre}
+.content code{font: .9em ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#242832;padding:2px 5px;border-radius:5px;color:#ffc3c7}.content pre code{padding:0;background:transparent;color:inherit}
+.content hr{border:0;border-top:1px solid var(--line);margin:34px 0}
+.content h2[id],.content h3[id]{scroll-margin-top:88px}
+.content h2{position:relative}.content h2:before{content:"";display:inline-block;width:5px;height:24px;background:var(--red);border-radius:3px;margin-right:12px;vertical-align:-3px}
+.content img{max-width:100%}
+.callout{border:1px solid #343945;border-radius:14px;padding:18px;background:linear-gradient(120deg,#171b23,#111319);margin:24px 0}
+.footer{border-top:1px solid var(--line);margin-top:50px;padding-top:20px;color:#747d8b;font-size:12px}
+.backtop{position:fixed;right:22px;bottom:22px;width:44px;height:44px;border:1px solid #46404a;border-radius:50%;background:#211419;color:white;font-size:20px;cursor:pointer;box-shadow:0 8px 28px #0008}
+.progress{height:2px;position:fixed;top:68px;left:0;z-index:20;background:var(--red);width:0}
+.markdown-fallback{white-space:pre-wrap;color:#d3d8e0}
+@media(max-width:980px){.layout{grid-template-columns:1fr;gap:24px;padding:22px 18px 60px}.sidebar{position:relative;top:0;max-height:none}.nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.side-title{padding-bottom:8px}.search{margin-bottom:10px}}
+@media(max-width:560px){.topbar{height:58px;padding:0 16px}.brand span{display:none}.top-actions .pill:first-child{display:none}.layout{padding:16px 12px 50px}.hero{padding:26px 22px}.hero h1{letter-spacing:-1px}.content > h2{font-size:24px}.content table{font-size:12px}.content td,.content th{padding:9px 8px}.content pre{font-size:10px;padding:14px}.nav{grid-template-columns:1fr 1fr}.progress{top:58px}}
+@media print{body{background:#fff;color:#111}.topbar,.sidebar,.backtop,.progress{display:none}.layout{display:block;max-width:none;padding:0}.hero{background:#f4f4f4;border:1px solid #ddd;color:#111}.hero p,.content p,.content li,.content td{color:#222}.content h2{break-after:avoid}.content pre{white-space:pre-wrap;background:#f5f5f5;color:#111}.content table{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<header class="topbar">
+  <div class="brand">NETFLIX <span>ENGINEERING NOTES</span></div>
+  <div class="top-actions"><span class="pill">SYSTEM DESIGN · BEGINNER FRIENDLY</span><span class="pill">12 SECTIONS</span></div>
+</header>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-title">On this page</div>
+    <input class="search" id="navSearch" type="search" placeholder="⌕  Find a section…" aria-label="Find a section">
+    <nav class="nav" id="nav"></nav>
+  </aside>
+  <main>
+    <section class="hero">
+      <div class="eyebrow"><span class="dot"></span> Architecture deep dive</div>
+      <h1>Netflix System Design<br><span style="color:#ff555e">Explained Simply</span></h1>
+      <p>A beginner-friendly walkthrough of how Netflix streams video to 250M+ people worldwide without (usually) buffering.</p>
+      <div class="stats">
+        <div class="stat"><strong>2 planes</strong>Control + data</div>
+        <div class="stat"><strong>12 chapters</strong>End-to-end overview</div>
+        <div class="stat"><strong>Global scale</strong>Streaming architecture</div>
+      </div>
+    </section>
+    <article class="content" id="content">
+<h1>Netflix System Design — Explained Simply</h1>
+<blockquote><p>A beginner-friendly walkthrough of how Netflix streams video to 250M+ people worldwide without (usually) buffering.</p></blockquote>
+<hr>
+<h2>1. The Big Idea (Read This First)</h2>
+<p>Netflix is really <strong>two separate systems</strong> working together:</p>
+<div class='table-wrap'><table><thead><tr><th>Part</th><th>What it does</th><th>Where it runs</th></tr></thead><tbody>
+<tr><td><strong>Control Plane</strong> ("the brain")</td><td>Login, browsing, search, recommendations, billing, "what should I watch?"</td><td><strong>AWS cloud</strong> (microservices)</td></tr>
+<tr><td><strong>Data Plane</strong> ("the muscle")</td><td>Actually delivering the video bytes to your screen</td><td><strong>Open Connect</strong> (Netflix's own CDN)</td></tr>
+</tbody></table></div>
+<blockquote><p><strong>Analogy:</strong> Think of a restaurant. The AWS side is the <em>waiter and menu</em> (takes your order, remembers your preferences). Open Connect is the <em>kitchen next door to your house</em> (the food is already cooked and sitting close to you).</p></blockquote>
+<hr>
+<h2>2. High-Level Architecture</h2>
+<pre><code>                        ┌──────────────────────────┐
+                        │        USER DEVICE       │
+                        │ (TV, Phone, Laptop, Web) │
+                        └────────────┬─────────────┘
+                                     │
+              ┌──────────────────────┴──────────────────────┐
+              │                                             │
+     (1) Browse / Login / Play click              (2) Stream the video
+              │                                             │
+              ▼                                             ▼
+   ┌─────────────────────┐                      ┌──────────────────────┐
+   │   AWS  (Control     │                      │  OPEN CONNECT (CDN)  │
+   │   Plane)            │                      │  Servers inside your │
+   │                     │  &quot;Play this movie    │  ISP / nearby city   │
+   │  • API Gateway      │   from THIS server&quot;  │                      │
+   │  • Microservices    │ ───────────────────▶ │  Stores video files  │
+   │  • Databases        │                      │  (OCAs)              │
+   │  • Recommendations  │                      └──────────────────────┘
+   └─────────────────────┘</code></pre>
+<p><strong>Flow in one line:</strong> You press play → AWS decides <em>which</em> nearby server is best → your device pulls video directly from that server.</p>
+<hr>
+<h2>3. What Happens When You Press "Play"? (Step by Step)</h2>
+<ol><li><strong>App opens</strong> → device calls Netflix API (hosted on AWS).</li><li><strong>Authentication</strong> → checks your account, subscription, and device.</li><li><strong>Home screen is built</strong> → recommendation services pick rows &amp; thumbnails <em>just for you</em>.</li><li><strong>You click Play</strong> → Playback service checks license/DRM rights and region availability.</li><li><strong>Steering service</strong> picks the best <strong>Open Connect Appliance (OCA)</strong> based on location, network health, and server load.</li><li><strong>Device receives a manifest</strong> (a list of available video qualities + OCA URLs).</li><li><strong>Video streams in small chunks</strong> (a few seconds each) directly from the OCA.</li><li><strong>Adaptive Bitrate (ABR)</strong> — if your Wi-Fi slows down, the player automatically switches to a lower quality chunk instead of buffering.</li><li><strong>Telemetry</strong> (play, pause, buffering, quality) is sent back to Netflix for analytics.</li></ol>
+<hr>
+<h2>4. Component Deep-Dive</h2>
+<h3>4.1 Client Apps</h3>
+<ul><li>Native apps for iOS, Android, Smart TVs, consoles, and a web app.</li><li>Contain the <strong>video player</strong> that handles adaptive streaming, DRM, subtitles, and audio tracks.</li></ul>
+<h3>4.2 API Gateway (Front Door)</h3>
+<ul><li>Single entry point for all client requests.</li><li>Netflix originally built <strong>Zuul</strong> (now evolved into <strong>Zuul 2</strong>, plus a <strong>federated GraphQL</strong> gateway).</li><li>Does: routing, authentication, rate limiting, request filtering, load shedding.</li></ul>
+<h3>4.3 Microservices (the heart of AWS side)</h3>
+<p>Netflix pioneered splitting one big app into <strong>hundreds of small services</strong>, each doing one job:</p>
+<pre><code> ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
+ │   User     │ │  Catalog   │ │  Search    │ │ Recommend  │
+ │  Service   │ │  Service   │ │  Service   │ │  Service   │
+ └────────────┘ └────────────┘ └────────────┘ └────────────┘
+ ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐
+ │  Billing   │ │  Playback  │ │ Watchlist  │ │ Notification│
+ │  Service   │ │  Service   │ │  Service   │ │  Service   │
+ └────────────┘ └────────────┘ └────────────┘ └────────────┘</code></pre>
+<p><strong>Why?</strong> Teams can deploy independently, scale only what's busy, and one failure doesn't take everything down.</p>
+<p>Supporting tools:</p>
+<ul><li><strong>Eureka</strong> – service discovery ("where is the Billing service right now?").</li><li><strong>Client-side load balancing</strong> (originally Ribbon) – callers choose a healthy instance.</li><li><strong>Resilience patterns</strong> (circuit breakers, retries, timeouts — popularized by <strong>Hystrix</strong>, now replaced by adaptive concurrency limits).</li></ul>
+<h3>4.4 Open Connect (Netflix's Own CDN) ⭐</h3>
+<p>This is the secret sauce.</p>
+<ul><li>Netflix builds its own servers called <strong>OCAs (Open Connect Appliances)</strong>.</li><li>They are placed <strong>inside ISPs' data centers</strong> and at internet exchange points, for free.</li><li><strong>Popular content is pre-loaded at night</strong> (off-peak) so it's already sitting close to viewers.</li></ul>
+<pre><code>Without CDN:   You ───────── (long distance) ───────── Netflix Data Center
+
+With Open Connect:   You ── (short hop) ── OCA inside your ISP  ✅</code></pre>
+<p><strong>Benefits:</strong></p>
+<ul><li>Lower latency and fewer buffering issues.</li><li>ISPs save bandwidth on their backbone.</li><li>Netflix controls the full delivery experience.</li></ul>
+<p><strong>Fill strategy:</strong> Content is <em>proactively pushed</em> to OCAs based on predicted popularity per region — not fetched on demand like a typical cache.</p>
+<h3>4.5 Video Processing / Encoding Pipeline</h3>
+<p>When a studio gives Netflix a movie, it's a huge raw master file. Netflix converts it to work on every device and network speed:</p>
+<pre><code> Raw Master File
+       │
+       ▼
+ ┌──────────────┐   split into small chunks
+ │  Chunking    │──────────────────────────┐
+ └──────────────┘                          │
+       ▼                                   ▼
+ ┌──────────────────────────────────────────────┐
+ │  Parallel encoding on thousands of AWS       │
+ │  machines: many resolutions × bitrates ×     │
+ │  codecs (H.264, HEVC, VP9, AV1)              │
+ └──────────────────────────────────────────────┘
+       │
+       ▼
+ ┌──────────────┐
+ │ Quality check│  (automated, uses VMAF quality metric)
+ └──────────────┘
+       │
+       ▼
+ Distribute to Open Connect servers worldwide</code></pre>
+<p>Smart tricks:</p>
+<ul><li><strong>Per-title / per-shot encoding:</strong> An animated cartoon needs fewer bits than an action movie, so each title (and even each scene) gets its own optimal settings.</li><li><strong>Multiple audio tracks, subtitles, and artwork</strong> are also processed.</li><li><strong>DRM</strong> (Widevine, PlayReady, FairPlay) protects the content.</li></ul>
+<h3>4.6 Adaptive Bitrate Streaming (ABR)</h3>
+<ul><li>Video is stored as <strong>many small segments</strong> (2–10 seconds) in <strong>multiple quality levels</strong>.</li><li>Protocols: <strong>MPEG-DASH</strong> / <strong>HLS</strong>.</li><li>The player measures your network speed and picks the best quality for each next segment.</li></ul>
+<pre><code>Fast network:  [4K][4K][4K][4K]
+Slow dip:      [4K][1080p][720p][480p]
+Recovered:     [720p][1080p][4K]</code></pre>
+<h3>4.7 Data Storage (Different Tools for Different Jobs)</h3>
+<div class='table-wrap'><table><thead><tr><th>Data type</th><th>Technology</th><th>Why</th></tr></thead><tbody>
+<tr><td>User profiles, viewing history, huge-scale data</td><td><strong>Apache Cassandra</strong></td><td>Highly available, scales across regions, no single point of failure</td></tr>
+<tr><td>Billing / transactions</td><td><strong>MySQL</strong> (relational)</td><td>Needs strong consistency (ACID)</td></tr>
+<tr><td>Super-fast caching</td><td><strong>EVCache</strong> (built on Memcached)</td><td>Millisecond reads; reduces DB load</td></tr>
+<tr><td>Search &amp; logs</td><td><strong>Elasticsearch</strong></td><td>Full-text search, analytics</td></tr>
+<tr><td>Videos, images, big files</td><td><strong>Amazon S3</strong></td><td>Cheap, durable object storage</td></tr>
+<tr><td>Distributed config/metadata</td><td>Various in-house stores</td><td>—</td></tr>
+</tbody></table></div>
+<p><strong>Rule of thumb:</strong> <em>No single database fits everything → use the right tool for each job</em> (this is called <strong>polyglot persistence</strong>).</p>
+<h3>4.8 Recommendation System 🎯</h3>
+<p>Netflix says most of what people watch comes from recommendations.</p>
+<p>Inputs:</p>
+<ul><li>What you watched, how long, when, on what device</li><li>Searches, ratings, thumbs up/down</li><li>Behavior of similar users</li><li>Content metadata (genre, cast, mood, language)</li></ul>
+<p>Techniques:</p>
+<ul><li>Collaborative filtering</li><li>Deep learning / embeddings</li><li>Contextual bandits (to test which choice works best)</li><li><strong>Personalized artwork</strong> – the same show may show you a different thumbnail than your friend.</li></ul>
+<p>Pipeline:</p>
+<pre><code> Offline (batch)  → Train models on huge data (Spark)   → Store results
+ Nearline         → Update with recent activity         → Fast refresh
+ Online (real-time)→ Re-rank results in milliseconds    → Your home page</code></pre>
+<h3>4.9 Data &amp; Event Pipeline</h3>
+<p>Every click, play, pause, and buffer event is recorded.</p>
+<pre><code> Devices &amp; Services → Kafka (event streaming) → Flink / Spark (processing)
+                                                  │
+                           ┌──────────────────────┼───────────────────┐
+                           ▼                      ▼                   ▼
+                     Data Lake (S3)        Real-time dashboards     ML training</code></pre>
+<p>Used for: recommendations, A/B tests, detecting playback problems, capacity planning, business reports.</p>
+<h3>4.10 Experimentation (A/B Testing)</h3>
+<p>Netflix constantly runs thousands of experiments: <em>Does this thumbnail increase plays? Does this UI change help?</em> Nothing major ships without data.</p>
+<hr>
+<h2>5. Resilience: Designing for Failure 💥</h2>
+<p>Netflix assumes <strong>things will break</strong> and builds around it.</p>
+<div class='table-wrap'><table><thead><tr><th>Technique</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><strong>Multi-region deployment</strong></td><td>Runs in multiple AWS regions; traffic can fail over if one region dies</td></tr>
+<tr><td><strong>Circuit breakers</strong></td><td>Stop calling a failing service so it doesn't drag everything down</td></tr>
+<tr><td><strong>Fallbacks</strong></td><td>If recommendations fail, show a generic popular list instead of an error</td></tr>
+<tr><td><strong>Bulkheads</strong></td><td>Isolate resources so one overloaded part can't sink the rest</td></tr>
+<tr><td><strong>Load shedding</strong></td><td>Under extreme load, drop low-priority requests to protect critical ones (playback &gt; browsing)</td></tr>
+<tr><td><strong>Timeouts &amp; retries</strong></td><td>Don't wait forever; retry safely</td></tr>
+</tbody></table></div>
+<h3>Chaos Engineering 🐒</h3>
+<p>Netflix intentionally breaks its own systems in production to find weaknesses:</p>
+<ul><li><strong>Chaos Monkey</strong> – randomly kills servers.</li><li><strong>Chaos Kong</strong> – simulates losing an entire AWS region.</li><li><strong>Simian Army / FIT</strong> – more failure-injection tools.</li></ul>
+<blockquote><p>If it can survive random failures on purpose, it can survive real ones.</p></blockquote>
+<hr>
+<h2>6. Scalability Strategies</h2>
+<ul><li><strong>Horizontal scaling:</strong> add more instances instead of bigger machines.</li><li><strong>Auto Scaling Groups:</strong> traffic spikes (e.g., Friday evening, new season drops) automatically add servers.</li><li><strong>Stateless services:</strong> any instance can handle any request.</li><li><strong>Caching everywhere:</strong> EVCache, CDN, client-side caches.</li><li><strong>Geo-distribution:</strong> serve users from the nearest region/OCA.</li><li><strong>Asynchronous processing:</strong> non-urgent work is queued instead of blocking the user.</li></ul>
+<hr>
+<h2>7. DevOps &amp; Observability</h2>
+<div class='table-wrap'><table><thead><tr><th>Need</th><th>Tool</th></tr></thead><tbody>
+<tr><td>Continuous delivery / deployments</td><td><strong>Spinnaker</strong> (open-sourced by Netflix)</td></tr>
+<tr><td>Canary releases</td><td>Roll out to a tiny % of users first, compare metrics, then expand</td></tr>
+<tr><td>Metrics &amp; monitoring</td><td><strong>Atlas</strong> (time-series metrics), plus alerting</td></tr>
+<tr><td>Distributed tracing</td><td>Trace a request across hundreds of services</td></tr>
+<tr><td>Logging</td><td>Centralized logs + Elasticsearch</td></tr>
+<tr><td>Infrastructure</td><td>Everything as code on <strong>AWS</strong> (EC2, S3, etc.)</td></tr>
+</tbody></table></div>
+<hr>
+<h2>8. Security</h2>
+<ul><li><strong>Authentication &amp; authorization</strong> at the gateway (tokens, device identity)</li><li><strong>DRM</strong> to prevent piracy</li><li><strong>Encryption</strong> in transit (TLS) and at rest</li><li><strong>Account sharing / abuse detection</strong> via device &amp; usage signals</li><li><strong>Zero-trust style</strong> internal service-to-service auth (mutual TLS)</li></ul>
+<hr>
+<h2>9. Complete Architecture (One Diagram)</h2>
+<pre><code>                          ┌─────────────────────────┐
+                          │      USER DEVICES       │
+                          └─────┬─────────────┬─────┘
+                       API calls│             │Video chunks
+                                ▼             ▼
+                      ┌───────────────┐  ┌──────────────────┐
+                      │  API Gateway  │  │  OPEN CONNECT    │
+                      │ (Zuul/GraphQL)│  │  OCAs in ISPs    │
+                      └──────┬────────┘  └────────▲─────────┘
+                             │                    │ pre-fill
+         ┌───────────────────┼───────────────┐    │ (nightly)
+         ▼                   ▼               ▼    │
+   ┌──────────┐       ┌────────────┐  ┌──────────┴─┐
+   │ User/Auth│       │ Playback &amp; │  │ Encoding &amp; │
+   │ Billing  │       │ Steering   │  │ Content    │
+   │ Services │       │ Services   │  │ Pipeline   │
+   └────┬─────┘       └─────┬──────┘  └──────┬─────┘
+        │                   │                │
+   ┌────┴───────────────────┴────────────────┴────┐
+   │ Recommendation • Search • Catalog • Watchlist │
+   └────┬────────────────────────────────────┬─────┘
+        │                                    │
+   ┌────▼─────┐  ┌──────────┐  ┌───────┐  ┌──▼────────┐
+   │ EVCache  │  │Cassandra │  │ MySQL │  │ S3 / ES   │
+   └──────────┘  └──────────┘  └───────┘  └───────────┘
+        ▲
+        │ events
+   ┌────┴────────────────────────────────────────────┐
+   │ Kafka → Flink/Spark → Data Lake → ML / Analytics│
+   └─────────────────────────────────────────────────┘</code></pre>
+<hr>
+<h2>10. Key Design Decisions &amp; Trade-offs</h2>
+<div class='table-wrap'><table><thead><tr><th>Decision</th><th>Why Netflix chose it</th><th>Trade-off</th></tr></thead><tbody>
+<tr><td>Microservices</td><td>Independent scaling &amp; deployment</td><td>Complexity, needs great tooling</td></tr>
+<tr><td>Own CDN (Open Connect)</td><td>Control quality &amp; cost at huge scale</td><td>Big hardware investment</td></tr>
+<tr><td>Cassandra (eventual consistency)</td><td>Always available, multi-region</td><td>Not ideal for strict transactions</td></tr>
+<tr><td>Cloud (AWS)</td><td>Elastic capacity, no data-center management for control plane</td><td>Cloud cost &amp; vendor dependence</td></tr>
+<tr><td>Chaos engineering</td><td>Finds weaknesses early</td><td>Requires cultural maturity</td></tr>
+<tr><td>Pre-positioned content</td><td>Smooth streaming at peak</td><td>Needs good popularity prediction</td></tr>
+</tbody></table></div>
+<hr>
+<h2>11. Quick Interview Cheat-Sheet 📝</h2>
+<p>If asked "Design Netflix" in an interview, hit these points:</p>
+<ol><li><strong>Requirements:</strong> upload/process videos, stream with low latency, search, recommendations, global scale.</li><li><strong>Split control plane vs data plane.</strong></li><li><strong>Video pipeline:</strong> chunk → encode into many formats → store.</li><li><strong>CDN is critical</strong> — push popular content to edge servers.</li><li><strong>Adaptive bitrate streaming</strong> (HLS/DASH).</li><li><strong>Microservices + API gateway.</strong></li><li><strong>Right database per use case</strong> (Cassandra, MySQL, cache, S3).</li><li><strong>Recommendations</strong> via offline + online ML.</li><li><strong>Resilience:</strong> multi-region, circuit breakers, chaos testing.</li><li><strong>Observability &amp; A/B testing.</strong></li></ol>
+<hr>
+<h2>12. Glossary</h2>
+<div class='table-wrap'><table><thead><tr><th>Term</th><th>Simple meaning</th></tr></thead><tbody>
+<tr><td><strong>CDN</strong></td><td>Network of servers placed near users to deliver content quickly</td></tr>
+<tr><td><strong>OCA</strong></td><td>Netflix's custom video-serving server</td></tr>
+<tr><td><strong>ABR</strong></td><td>Player auto-adjusts quality based on network speed</td></tr>
+<tr><td><strong>Microservice</strong></td><td>A small independent service that does one job</td></tr>
+<tr><td><strong>API Gateway</strong></td><td>The front door that routes all requests</td></tr>
+<tr><td><strong>Service discovery</strong></td><td>A directory to find where services are running</td></tr>
+<tr><td><strong>Circuit breaker</strong></td><td>Stops calling a broken service to prevent cascading failure</td></tr>
+<tr><td><strong>Polyglot persistence</strong></td><td>Using different databases for different needs</td></tr>
+<tr><td><strong>Canary release</strong></td><td>Releasing a change to a small group first</td></tr>
+<tr><td><strong>Chaos engineering</strong></td><td>Deliberately causing failures to test resilience</td></tr>
+<tr><td><strong>DRM</strong></td><td>Technology that protects content from piracy</td></tr>
+</tbody></table></div>
+<hr>
+<h3>📌 Summary in 3 Lines</h3>
+<ol><li><strong>AWS microservices</strong> handle everything <em>except</em> video bytes (login, browse, recommendations, playback decisions).</li><li><strong>Open Connect CDN</strong> delivers the actual video from servers placed right inside your ISP.</li><li><strong>Resilience, data pipelines, and ML personalization</strong> tie it together so streaming feels instant, reliable, and tailored to you.</li></ol>
+<p><em>Note: Netflix's internal stack evolves constantly; some tools named here (e.g., Hystrix, Ribbon) have been replaced or deprecated in favor of newer internal solutions, but the architectural ideas remain the same.</em></p>
+</article>
+    <div class="footer">A self-contained study guide · Built from the supplied Markdown · All styling and interactions are included in this HTML file.</div>
+  </main>
+</div>
+<button class="backtop" aria-label="Back to top" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script>
+(function(){
+ const content=document.getElementById('content'), nav=document.getElementById('nav'), search=document.getElementById('navSearch');
+ const headings=[...content.querySelectorAll('h2')];
+ headings.forEach((h,i)=>{if(!h.id)h.id='section-'+(i+1);const a=document.createElement('a');a.href='#'+h.id;a.textContent=h.textContent.replace(/^[^A-Za-z0-9]+/,'').trim();a.dataset.label=a.textContent.toLowerCase();nav.appendChild(a);});
+ search.addEventListener('input',()=>{const q=search.value.toLowerCase();[...nav.children].forEach(a=>a.style.display=a.dataset.label.includes(q)?'block':'none')});
+ const links=[...nav.querySelectorAll('a')];
+ const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id));}}),{rootMargin:'-15% 0px -70% 0px'});
+ headings.forEach(h=>observer.observe(h));
+ const progress=document.getElementById('progress');
+ window.addEventListener('scroll',()=>{let max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?scrollY/max*100:0)+'%'},{passive:true});
+})();
+</script>
+</body>
+</html>
