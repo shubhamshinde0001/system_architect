@@ -28,3 +28,16 @@ class ArchitectureAdmin(admin.ModelAdmin):
     prepopulated_fields = {
         "slug": ("title",)
     }
+
+
+from django.contrib import admin
+from .models import WebsiteReview
+
+
+@admin.register(WebsiteReview)
+class WebsiteReviewAdmin(admin.ModelAdmin):
+
+    list_display = ('name', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at')
+    search_fields = ('name', 'review')
+    ordering = ('-created_at',)

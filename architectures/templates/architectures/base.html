@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{% block title %}SystemAtlas{% endblock %}</title>
+    <title>{% block title %}SystemArct{% endblock %}</title>
 
     <link rel="stylesheet"
           href="{% static 'architectures/style.css' %}">
@@ -17,13 +17,13 @@
         <a href="{% url 'architectures:library' %}"
            class="brand">
             <span class="brand-icon">S</span>
-            <span>System<span class="accent">Atlas</span></span>
+            <span>System<span class="accent">Arct</span></span>
         </a>
 
         <nav class="nav-links">
-            <a href="{% url 'architectures:library' %}">Library</a>
-            <a href="#about">About</a>
-            <a href="/admin/">Admin</a>
+            <a href="#about">Library</a>
+            <a href="{% url 'architectures:about' %}">About</a>
+            <a href="/reviews">Reviews</a>
         </nav>
 
         <div class="nav-status">
@@ -39,14 +39,14 @@
 
     <footer class="footer" id="about">
         <div class="brand footer-brand">
-            System<span class="accent">Atlas</span>
+            System<span class="accent">Arct</span>
         </div>
         <p>
             Explore systems. Understand architecture.
             Build better software.
         </p>
         <p class="copyright">
-            © {% now "Y" %} SystemAtlas
+            © {% now "Y" %} SystemArct
         </p>
     </footer>
 

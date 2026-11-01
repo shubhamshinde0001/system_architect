@@ -1,0 +1,284 @@
+{% extends "architectures/base.html" %}
+
+{% block title %}Website Reviews | SystemAtlas{% endblock %}
+
+{% block content %}
+
+<style>
+.reviews-container {
+    max-width: 1100px;
+    margin: 50px auto;
+    padding: 20px;
+    color: #e5e7eb;
+}
+
+.review-heading {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.review-heading h1 {
+    font-size: 36px;
+    font-weight: 800;
+}
+
+.review-heading p {
+    color: #9ca3af;
+}
+
+.review-stats {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: #151e2e;
+    border: 1px solid #263449;
+    border-radius: 12px;
+    padding: 22px 40px;
+    text-align: center;
+    min-width: 180px;
+}
+
+.stat-card h2 {
+    color: #38bdf8;
+    font-size: 30px;
+    margin: 0;
+}
+
+.stat-card p {
+    color: #9ca3af;
+    margin: 5px 0 0;
+}
+
+.review-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 30px;
+}
+
+.review-form, .review-card {
+    background: #151e2e;
+    border: 1px solid #263449;
+    border-radius: 14px;
+    padding: 25px;
+}
+
+.review-form h2, .review-list h2 {
+    margin-top: 0;
+    margin-bottom: 22px;
+}
+
+.review-form label {
+    display: block;
+    margin: 15px 0 8px;
+    color: #cbd5e1;
+}
+
+.review-form input,
+.review-form select,
+.review-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: #0b1220;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 12px;
+    color: white;
+    font-size: 14px;
+}
+
+.review-form button {
+    margin-top: 20px;
+    width: 100%;
+    background: #0284c7;
+    color: white;
+    border: none;
+    padding: 13px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.review-form button:hover {
+    background: #0369a1;
+}
+
+.review-card {
+    margin-bottom: 15px;
+}
+
+.review-card h3 {
+    margin: 0 0 7px;
+    color: #f8fafc;
+}
+
+.review-stars {
+    color: #fbbf24;
+    font-size: 19px;
+    letter-spacing: 2px;
+}
+
+.review-date {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.review-text {
+    color: #cbd5e1;
+    line-height: 1.7;
+    margin-top: 15px;
+    white-space: pre-wrap;
+}
+
+.review-message {
+    padding: 12px;
+    background: #164e63;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.error-text {
+    color: #fca5a5;
+    font-size: 13px;
+}
+
+@media(max-width: 750px) {
+    .review-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .review-heading h1 {
+        font-size: 28px;
+    }
+}
+</style>
+
+
+<div class="reviews-container">
+
+    <div class="review-heading">
+        <h1>Community Reviews</h1>
+        <p>
+            Share your experience with SystemAtlas.
+            Read what others think about our platform.
+        </p>
+    </div>
+
+
+    <!-- Review Statistics -->
+
+    <div class="review-stats">
+
+        <div class="stat-card">
+            <h2>{{ total_reviews }}</h2>
+            <p>Total Reviews</p>
+        </div>
+
+        <div class="stat-card">
+            <h2>{{ average_rating|floatformat:1 }} / 5</h2>
+            <p>Average Rating</p>
+        </div>
+
+    </div>
+
+
+    <div class="review-layout">
+
+        <!-- Write Review Form -->
+
+        <div class="review-form">
+
+            <h2>Write a Review</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="review-message">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <label>Your Name</label>
+                {{ form.name }}
+                {% for error in form.name.errors %}
+                    <div class="error-text">{{ error }}</div>
+                {% endfor %}
+
+                <label>Your Rating</label>
+                {{ form.rating }}
+                {% for error in form.rating.errors %}
+                    <div class="error-text">{{ error }}</div>
+                {% endfor %}
+
+                <label>Your Review</label>
+                {{ form.review }}
+                {% for error in form.review.errors %}
+                    <div class="error-text">{{ error }}</div>
+                {% endfor %}
+
+                <button type="submit">
+                    Submit Review
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- Display Reviews -->
+
+        <div class="review-list">
+
+            <h2>What People Say</h2>
+
+            {% for item in reviews %}
+
+                <div class="review-card">
+
+                    <h3>{{ item.name }}</h3>
+
+                    <div class="review-stars">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= item.rating %}
+                                ★
+                            {% else %}
+                                ☆
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    <p class="review-text">
+                        {{ item.review }}
+                    </p>
+
+                    <div class="review-date">
+                        {{ item.created_at|date:"d M Y" }}
+                    </div>
+
+                </div>
+
+            {% empty %}
+
+                <div class="review-card">
+                    <h3>No reviews yet!</h3>
+                    <p class="review-text">
+                        Be the first person to share your experience.
+                    </p>
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

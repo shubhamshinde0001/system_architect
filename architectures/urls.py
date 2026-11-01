@@ -15,4 +15,7 @@ urlpatterns = [
         views.architecture_detail,
         name="detail"
     ),
+
+     path('reviews/', views.reviews, name='reviews'),
+     path('about/', views.about, name='about'),
 ]
